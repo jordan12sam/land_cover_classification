@@ -37,7 +37,7 @@ def segment_stats(segment_pixels):
 
 def open_AOI():
     #open image of the 'Area of Interest'
-    #all bands should be in the same resuolution
+    #all bands should be in the same resolution
     fp = 'data/AOI.tif'
     ds = gdal.Open(fp)
     nbands = ds.RasterCount
@@ -70,13 +70,12 @@ def feature_extraction(img, ds):
     segments_ds.GetRasterBand(1).WriteArray(segments)
     segments_ds = None
 
-    #create a list of unique segment ids
     obj_start = time.time()
+    #create a list of unique segment ids
     segment_ids = np.unique(segments)
 
-    #create lists to store segment stats and ids respectively
+    #create a list to store segment stats
     objects = []
-    object_ids = []
 
     #loop through list of unique segment ids
     for id in segment_ids:
@@ -88,7 +87,6 @@ def feature_extraction(img, ds):
         #append to the list of stats 'objects'
         object_feature = segment_stats(segment_pixels)
         objects.append(object_feature)
-        object_ids.append(id)
 
         #print progress every 2500 segments
         if id%2500 == 0:
@@ -98,9 +96,7 @@ def feature_extraction(img, ds):
 
     #save objects
     with open('data/objects.txt', 'wb') as object_path:
-        pickle.dump(objects, object_path)
-    with open('data/object_ids.txt', 'wb') as object_path:
-        pickle.dump(object_ids, object_path)
+        pickle.dump(objects, object_path)                                       
 
     return segments, objects
 
@@ -163,8 +159,6 @@ def label_data(segments, objects, ground_truth):
     #create lists to hold features and labels
     training_objects = []
     training_labels = []
-    testing_objects = []
-    testing_labels = []
 
     #for each class id
     for klass in classes:
@@ -226,16 +220,16 @@ def accuracy(truth):
 
     #create a confusion matrix comparing the true and predicted values
     cm = metrics.confusion_matrix(truth[idx], pred[idx])
-    
     print('Matrix:\n', cm)
 
     #print performance metrics
+    #per class accuracy
     accuracy = (cm.diagonal() / cm.sum(axis=0))*100
     print('Prediction Accuracy:\n', accuracy)
-
+    #overall accuracy
     accuracy2 = (cm.diagonal().sum() / cm.sum(axis=0).sum())
     print('Total Accuracy:', accuracy2)
-
+    #kappa coefficient
     kappa = metrics.cohen_kappa_score(truth[idx], pred[idx])
     print('Kappa Score:', kappa)
 
